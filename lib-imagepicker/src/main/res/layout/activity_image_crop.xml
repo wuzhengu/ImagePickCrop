@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	>
+	
+	<include layout="@layout/image_top_bar"/>
+	
+	<wzg.lib.imagepicker.view.CropImageView
+		android:id="@+id/image_crop_view"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		/>
+	<!--
+	<CropImageView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="#000"
+		app:backgroundColor="#FFFFFB"
+		app:cropMode="ratio_fit_image"
+		app:frameColor="#86C166"
+		app:frameStrokeWeight="1dp"
+		app:guideColor="#AA86C166"
+		app:guideShowMode="show_on_touch"
+		app:guideStrokeWeight="1dp"
+		app:handleColor="#86C166"
+		app:handleShowMode="show_always"
+		app:handleSize="8dp"
+		app:minFrameSize="50dp"
+		app:overlayColor="#AA1C1C1C"
+		app:touchPadding="8dp"
+		/>
+	-->
+</LinearLayout>

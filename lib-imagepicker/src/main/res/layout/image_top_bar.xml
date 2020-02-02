@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:id="@+id/image_title_bar"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:background="@color/image_primary"
+	android:fitsSystemWindows="true"
+	>
+	
+	<ImageView
+		android:id="@+id/image_title_left"
+		android:layout_width="40dp"
+		android:layout_height="40dp"
+		android:layout_gravity="center|left"
+		android:scaleType="centerInside"
+		android:src="@mipmap/image_arrow_left"
+		/>
+	
+	<TextView
+		android:id="@+id/image_title_center"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center|left"
+		android:layout_marginLeft="40dp"
+		android:gravity="center"
+		android:text="@string/image_pick"
+		android:textColor="#fff"
+		android:textSize="18sp"
+		/>
+	
+	<Button
+		android:id="@+id/image_title_right"
+		style="@style/Widget.AppCompat.Button.Colored"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center|right"
+		android:gravity="center"
+		android:text="@string/confirm"
+		android:textColor="?android:textColorPrimaryInverse"
+		/>
+</FrameLayout>

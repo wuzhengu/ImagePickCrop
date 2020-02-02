@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tool="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	>
+	
+	<include layout="@layout/image_top_bar"/>
+	
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_weight="1"
+		>
+		
+		<android.support.v7.widget.RecyclerView
+			android:id="@+id/rv_main_images"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:background="#000"
+			/>
+		
+		<TextView
+			android:visibility="gone"
+			android:id="@+id/tv_image_time"
+			android:layout_width="match_parent"
+			android:layout_height="24dp"
+			android:background="@color/text_bg_gray"
+			android:gravity="center_vertical"
+			android:paddingLeft="16dp"
+			android:textColor="@color/text_color_white"
+			/>
+	</RelativeLayout>
+	
+	<RelativeLayout
+		android:id="@+id/image_bottom_bar"
+		android:layout_width="match_parent"
+		android:layout_height="50dp"
+		android:background="@color/image_primary"
+		>
+		
+		<TextView
+			android:id="@+id/tv_main_imageFolders"
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			android:layout_alignParentLeft="true"
+			android:layout_marginLeft="10dp"
+			android:drawablePadding="4dp"
+			android:drawableRight="@mipmap/icon_album_index"
+			android:gravity="center"
+			android:text="@string/all_media"
+			android:textColor="@android:color/white"
+			android:textSize="16sp"
+			tool:text="@string/all_media"
+			/>
+	</RelativeLayout>
+</LinearLayout>

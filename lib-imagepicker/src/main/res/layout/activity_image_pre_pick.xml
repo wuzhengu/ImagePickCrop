@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	>
+	
+	<include layout="@layout/image_top_bar"/>
+	
+	<FrameLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_weight="1"
+		>
+		
+		<wzg.lib.imagepicker.view.HackyViewPager
+			android:id="@+id/image_view_pager"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			/>
+		
+		<ImageView
+			android:visibility="gone"
+			android:id="@+id/image_video_play"
+			android:layout_width="80dp"
+			android:layout_height="80dp"
+			android:layout_gravity="center"
+			android:src="@mipmap/icon_video_play"
+			/>
+	</FrameLayout>
+	
+	<RelativeLayout
+		android:id="@+id/image_bottom_bar"
+		android:layout_width="match_parent"
+		android:layout_height="50dp"
+		android:background="@color/image_primary"
+		android:gravity="right"
+		android:paddingRight="16dp"
+		>
+		
+		<LinearLayout
+			android:id="@+id/image_item_select"
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			android:gravity="right"
+			android:orientation="horizontal"
+			>
+			
+			<ImageView
+				android:id="@+id/image_item_check"
+				android:layout_width="20dp"
+				android:layout_height="20dp"
+				android:layout_gravity="center_vertical"
+				android:layout_marginRight="6dp"
+				android:scaleType="centerCrop"
+				android:src="@mipmap/icon_image_checked"
+				/>
+			
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center"
+				android:text="@string/image_select"
+				android:textColor="@color/text_color_white"
+				android:textSize="14sp"
+				/>
+		</LinearLayout>
+	</RelativeLayout>
+</LinearLayout>

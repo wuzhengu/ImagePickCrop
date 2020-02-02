@@ -1,0 +1,16 @@
+
+buildscript{
+	buildscript{
+		repositories{
+			mavenLocal()
+		}
+	}
+	dependencies{
+		classpath "com.android.tools.build:gradle:2.3.3"
+	}
+}
+
+ext{
+	SDK_VERSION=27
+	BT_VERSION="27.0.0"
+}

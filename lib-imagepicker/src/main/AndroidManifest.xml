@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	package="wzg.lib.imagepicker"
+	>
+	
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.CAMERA"/>
+	
+	<application
+		android:theme="@style/ImagePickerTheme"
+		>
+		<activity
+			android:name="wzg.lib.imagepicker.ui.ImagePickActivity"
+			/>
+		<activity
+			android:name="wzg.lib.imagepicker.ui.ImagePrePickActivity"
+			/>
+		<activity
+			android:name="wzg.lib.imagepicker.ui.ImageCropActivity"
+			/>
+		<activity
+			android:name="wzg.lib.imagepicker.ui.ImagePreviewActivity"
+			/>
+		
+		<provider
+			android:name="wzg.lib.imagepicker.ImageFileProvider"
+			android:authorities="${applicationId}.ImageFileProvider"
+			android:exported="false"
+			android:grantUriPermissions="true"
+			>
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/image_picker"
+				/>
+		</provider>
+	</application>
+</manifest>

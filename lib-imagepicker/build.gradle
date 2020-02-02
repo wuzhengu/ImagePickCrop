@@ -1,0 +1,27 @@
+apply plugin: 'com.android.library'
+
+android{
+	
+	buildToolsVersion BT_VERSION
+	compileSdkVersion SDK_VERSION
+	
+	defaultConfig{
+		minSdkVersion 19
+		versionCode 20200202
+		versionName "2020.02.02.24"
+	}
+	
+}
+
+repositories{
+	mavenLocal()
+	//jcenter()
+	//maven{ url "https://maven.google.com" }
+}
+
+dependencies{
+	compile fileTree(dir: 'libs', include: ['*.jar'])
+	
+	compile "com.android.support:appcompat-v7:${SDK_VERSION}.0.0"
+	compile "com.android.support:recyclerview-v7:${SDK_VERSION}.0.0"
+}

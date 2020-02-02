@@ -1,0 +1,27 @@
+apply plugin: 'com.android.application'
+
+android{
+	buildToolsVersion BT_VERSION
+	compileSdkVersion SDK_VERSION
+	
+	defaultConfig{
+		minSdkVersion 19
+		targetSdkVersion SDK_VERSION
+		versionCode 1
+		versionName "1.0"
+		applicationId "wzg.imagepicker"
+	}
+}
+
+repositories{
+	mavenLocal()
+}
+
+dependencies{
+	compile fileTree(dir: 'libs', include: ['*.jar'])
+	
+	compile project(':lib-imagepicker')
+	
+	compile "com.android.support:appcompat-v7:$SDK_VERSION.0.0"
+	
+}
