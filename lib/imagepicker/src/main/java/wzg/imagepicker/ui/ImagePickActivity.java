@@ -3,84 +3,86 @@ package wzg.imagepicker.ui;
 import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.FileProvider;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import wzg.imagepicker.ImageCrop;
-import wzg.imagepicker.ImageFileProvider;
-import wzg.imagepicker.ImagePicker;
-import wzg.imagepicker.ImagePreview;
-import wzg.imagepicker.pkg.*;
+import wzg.imagepicker.ImageCrop.K2;
+import wzg.imagepicker.ImagePick;
+import wzg.imagepicker.ImagePick.K1;
+import wzg.imagepicker.ImagePreview.K3;
 import wzg.imagepicker.adapter.ImageFoldersAdapter;
-import wzg.imagepicker.adapter.ImagePickerAdapter;
+import wzg.imagepicker.content.ImagePickFileProvider;
+import wzg.imagepicker.data.ItemType;
 import wzg.imagepicker.data.MediaFile;
 import wzg.imagepicker.data.MediaFolder;
 import wzg.imagepicker.executors.CommonExecutor;
-import wzg.imagepicker.listener.MediaLoadCallback;
-import wzg.imagepicker.manager.ConfigManager;
+import wzg.imagepicker.loader.DefaultImageLoader;
+import wzg.imagepicker.loader.ImageLoader;
 import wzg.imagepicker.manager.SelectionManager;
+import wzg.imagepicker.pkg.R;
 import wzg.imagepicker.task.ImageLoadTask;
+import wzg.imagepicker.task.MediaLoadCallback;
 import wzg.imagepicker.task.MediaLoadTask;
 import wzg.imagepicker.task.VideoLoadTask;
-import wzg.imagepicker.utils.*;
+import wzg.imagepicker.utils.DataUtil;
+import wzg.imagepicker.utils.MediaFileUtil;
+import wzg.imagepicker.utils.PermissionUtil;
+import wzg.imagepicker.utils.Utils;
 import wzg.imagepicker.view.ImageFolderPopupWindow;
+import wzg.imagepicker.view.SquareImageView;
+import wzg.imagepicker.view.SquareRelativeLayout;
 
 /**
- Created by wuzhengu on 2020/02/01 <br/>
- 多图选择页面
+ * Created by wuzhengu on 2020/02/01 <br/>
+ * 多图选择页面
  */
 public class ImagePickActivity extends ImageBaseActivity
-		implements ImagePickerAdapter.OnItemClickListener, ImageFoldersAdapter.OnImageFolderChangeListener
+	implements ImageFoldersAdapter.OnImageFolderChangeListener
 {
-	/**
-	 启动参数
-	 */
-	private String mTitle;
-	private boolean isShowCamera;
-	private boolean isShowImage;
-	private boolean isShowVideo;
-	private boolean isSingleType;
-	private int mMaxCount;
-	/**
-	 界面UI
-	 */
-	private TextView mTvTitle;
-	private TextView mTvCommit;
-	private TextView mTvImageTime;
-	private RecyclerView mRecyclerView;
-	private TextView mTvImageFolders;
-	private ImageFolderPopupWindow mImageFolderPopupWindow;
+	private TextView tvTitle;
+	private TextView tvSubmit;
+	private TextView tvImageTime;
+	private RecyclerView vList;
+	private TextView tvFolders;
+	private ImageFolderPopupWindow mPopupWindow;
 	private ProgressDialog mProgressDialog;
-	private RelativeLayout mRlBottom;
-	private GridLayoutManager mGridLayoutManager;
-	private ImagePickerAdapter mAdapter;
+	private RelativeLayout vBottom;
+	private GridLayoutManager vGrid;
+	private Adapter mAdapter;
 	//图片数据源
 	private List<MediaFile> mFileList;
 	//文件夹数据源
 	private List<MediaFolder> mFolderList;
 	//是否显示时间
-	private boolean isShowTime;
+	private boolean showTime;
 	//表示屏幕亮暗
-	private static final int LIGHT_OFF=0;
-	private static final int LIGHT_ON=1;
-	private Handler mMyHandler=new Handler();
-	private Runnable mHideRunnable=new Runnable()
+	private static final int LIGHT_OFF = 0;
+	private static final int LIGHT_ON = 1;
+	private Handler mMyHandler = new Handler();
+	private Runnable mHideRunnable = new Runnable()
 	{
 		@Override
 		public void run(){
@@ -90,74 +92,74 @@ public class ImagePickActivity extends ImageBaseActivity
 	/** 拍照相关 */
 	private String mFilePath;
 	/** 权限相关 */
-	private static final int REQ_CAMERA_PERMISSION=0x03;
+	private static final int REQ_CAMERA_PERMISSION = 0x03;
 	/** 大图预览选择 */
-	private static final int REQ_PREVIEW=0x01;
+	private static final int REQ_PREVIEW = 0x01;
 	/** 点击拍照 */
-	private static final int REQ_CAPTURE=0x02;
+	private static final int REQ_CAPTURE = 0x02;
 	/** 裁剪图片 */
-	private static final int REQ_CROP=0x03;
-	ImageCrop mCrop;
-	private int mCheckItem=-1;
+	private static final int REQ_CROP = 0x03;
+	private int mCheckItem = -1;
+	private int mMaxCount;
+	private boolean mShowVideo;
+	private boolean mShowGif;
+	private boolean mShowImage;
+	private boolean mShowCamera;
+	static ImageLoader imageLoader = null;
+	
+	public static ImageLoader getImageLoader(Intent intent){
+		String clsName = intent==null? null: K1.LOADER.get(intent, null);
+		if(clsName!=null){
+			try{
+				Class<?> cls = Class.forName(clsName);
+				if(!cls.isInstance(imageLoader)){
+					imageLoader = (ImageLoader)cls.getConstructor().newInstance();
+				}
+			}catch(Throwable ex){
+				ex.printStackTrace();
+			}
+		}
+		if(imageLoader==null) imageLoader = new DefaultImageLoader();
+		return imageLoader;
+	}
 	
 	@Override
 	protected int getLayoutId(){
 		return R.layout.activity_image_pick;
 	}
 	
-	/**
-	 初始化配置
-	 */
 	@Override
-	protected void initConfig(){
-		ConfigManager config=ConfigManager.getInstance();
-		mTitle=config.getTitle();
-		isShowCamera=config.isShowCamera();
-		isShowImage=config.isShowImage();
-		isShowVideo=config.isShowVideo();
-		isSingleType=config.isSingleType();
-		mMaxCount=config.getMaxCount();
-		SelectionManager.getInstance().setMaxCount(mMaxCount);
-		//载入历史选择记录
-		List<String> list=config.getImagePaths();
-		SelectionManager.getInstance().select(list);
-		mCrop=ImageCrop.from(getIntent());
-		if(mMaxCount>1 || config.isShowVideo()) mCrop.setCrop(false);
-	}
-	
-	/**
-	 初始化布局控件
-	 */
-	@Override
-	protected void initView(){
-		mProgressDialog=ProgressDialog.show(this, null, getString(R.string.scanner_image));
+	protected void onCreate(@Nullable Bundle state){
+		super.onCreate(state);
+		Intent intent = getIntent();
+		mMaxCount = K1.MAX_COUNT.get(intent, 1);
+		mShowVideo = K1.SHOW_VIDEO.get(intent, true);
+		mShowGif = K1.SHOW_GIF.get(intent, true);
+		mShowImage = K1.SHOW_IMAGE.get(intent, true);
+		mShowCamera = K1.SHOW_CAMERA.get(intent, true);
+		SelectionManager.getInstance().select(K1.ITEMS.get(intent, null));
+		getImageLoader(intent);
+		mProgressDialog = ProgressDialog.show(this, null, getString(R.string.scanner_image));
 		//顶部栏相关
-		mTvTitle=findViewById(R.id.image_title_center);
-		if(!TextUtils.isEmpty(mTitle)) mTvTitle.setText(mTitle);
-		else mTvTitle.setText(getString(R.string.image_pick));
-		mTvCommit=findViewById(R.id.image_title_right);
+		String title = K1.TITLE.get(getIntent(), null);
+		tvTitle = findViewById(R.id.image_title_center);
+		if(title!=null) tvTitle.setText(title);
+		else tvTitle.setText(getString(R.string.image_pick));
+		tvSubmit = findViewById(R.id.image_title_right);
 		//悬浮标题相关
-		mTvImageTime=findViewById(R.id.tv_image_time);
+		tvImageTime = findViewById(R.id.tv_image_time);
 		//底部栏相关
-		mRlBottom=findViewById(R.id.image_bottom_bar);
-		mTvImageFolders=findViewById(R.id.tv_main_imageFolders);
+		vBottom = findViewById(R.id.image_bottom_bar);
+		tvFolders = findViewById(R.id.tv_main_imageFolders);
 		//列表相关
-		mRecyclerView=findViewById(R.id.rv_main_images);
-		mGridLayoutManager=new GridLayoutManager(this, 4);
-		mRecyclerView.setLayoutManager(mGridLayoutManager);
-		mRecyclerView.setHasFixedSize(true); //避免RecyclerView重新计算大小
-		mRecyclerView.setItemViewCacheSize(8);
-		mFileList=new ArrayList<>();
-		mAdapter=new ImagePickerAdapter(this, mFileList);
-		mAdapter.setOnItemClickListener(this);
-		mRecyclerView.setAdapter(mAdapter);
-	}
-	
-	/**
-	 初始化控件监听事件
-	 */
-	@Override
-	protected void initListener(){
+		vList = findViewById(R.id.rv_main_images);
+		vGrid = new GridLayoutManager(this, 4);
+		vList.setLayoutManager(vGrid);
+		vList.setHasFixedSize(true); //避免RecyclerView重新计算大小
+		vList.setItemViewCacheSize(8);
+		mFileList = new ArrayList<>();
+		mAdapter = new Adapter(mFileList);
+		vList.setAdapter(mAdapter);
 		findViewById(R.id.image_title_left).setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -166,24 +168,24 @@ public class ImagePickActivity extends ImageBaseActivity
 				finish();
 			}
 		});
-		mTvCommit.setOnClickListener(new View.OnClickListener()
+		tvSubmit.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v){
 				clickCommit();
 			}
 		});
-		mTvImageFolders.setOnClickListener(new View.OnClickListener()
+		tvFolders.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View view){
-				if(mImageFolderPopupWindow!=null){
+				if(mPopupWindow!=null){
 					setLightMode(LIGHT_OFF);
-					mImageFolderPopupWindow.showAsDropDown(mRlBottom, 0, 0);
+					mPopupWindow.showAsDropDown(vBottom, 0, 0);
 				}
 			}
 		});
-		mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
+		vList.addOnScrollListener(new RecyclerView.OnScrollListener()
 		{
 			@Override
 			public void onScrollStateChanged(RecyclerView recyclerView, int newState){
@@ -197,42 +199,41 @@ public class ImagePickActivity extends ImageBaseActivity
 				updateImageTime();
 			}
 		});
-	}
-	
-	/**
-	 获取数据源
-	 */
-	@Override
-	protected void getData(){
 		//进行权限的判断
-		boolean hasPermission=PermissionUtil.checkPermission(this);
+		boolean hasPermission = PermissionUtil.checkPermission(this);
 		if(!hasPermission){
 			ActivityCompat.requestPermissions(this,
-					new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
-					REQ_CAMERA_PERMISSION);
+				new String[]{
+					Manifest.permission.CAMERA,
+					Manifest.permission.WRITE_EXTERNAL_STORAGE
+				},
+				REQ_CAMERA_PERMISSION);
 		}else{
 			startScannerTask();
 		}
 	}
 	
 	/**
-	 权限申请回调
+	 * 权限申请回调
 	 */
 	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+		@NonNull int[] grantResults){
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		if(requestCode==REQ_CAMERA_PERMISSION){
-			if(grantResults.length>=1){
-				int cameraResult=grantResults[0];//相机权限
-				int sdResult=grantResults[1];//sd卡权限
-				boolean cameraGranted=cameraResult==PackageManager.PERMISSION_GRANTED;//拍照权限
-				boolean sdGranted=sdResult==PackageManager.PERMISSION_GRANTED;//拍照权限
+			if(grantResults.length >= 1){
+				int cameraResult = grantResults[0];//相机权限
+				int sdResult = grantResults[1];//sd卡权限
+				boolean cameraGranted = cameraResult==PackageManager.PERMISSION_GRANTED;//拍照权限
+				boolean sdGranted = sdResult==PackageManager.PERMISSION_GRANTED;//拍照权限
 				if(cameraGranted && sdGranted){
 					//具有拍照权限，sd卡权限，开始扫描任务
 					startScannerTask();
 				}else{
 					//没有权限
-					Toast.makeText(this, getString(R.string.permission_tip), Toast.LENGTH_SHORT).show();
+					Toast
+						.makeText(this, getString(R.string.permission_tip), Toast.LENGTH_SHORT)
+						.show();
 					finish();
 				}
 			}
@@ -240,97 +241,90 @@ public class ImagePickActivity extends ImageBaseActivity
 	}
 	
 	/**
-	 开启扫描任务
+	 * 开启扫描任务
 	 */
 	private void startScannerTask(){
-		Runnable mediaLoadTask=null;
-		//照片、视频全部加载
-		if(isShowImage && isShowVideo){
-			mediaLoadTask=new MediaLoadTask(this, new MediaLoader());
-		}
-		//只加载视频
-		if(!isShowImage && isShowVideo){
-			mediaLoadTask=new VideoLoadTask(this, new MediaLoader());
-		}
-		//只加载图片
-		if(isShowImage && !isShowVideo){
-			mediaLoadTask=new ImageLoadTask(this, new MediaLoader());
-		}
-		//不符合以上场景，采用照片、视频全部加载
-		if(mediaLoadTask==null){
-			mediaLoadTask=new MediaLoadTask(this, new MediaLoader());
-		}
-		CommonExecutor.getInstance().execute(mediaLoadTask);
-	}
-	
-	/**
-	 处理媒体数据加载成功后的UI渲染
-	 */
-	class MediaLoader implements MediaLoadCallback
-	{
-		@Override
-		public void loadMediaSuccess(final List<MediaFolder> mediaFolderList){
-			runOnUiThread(new Runnable()
-			{
-				@Override
-				public void run(){
-					if(!mediaFolderList.isEmpty()){
-						//默认加载全部照片
-						mFileList.addAll(mediaFolderList.get(0).getMediaFileList());
-						mAdapter.notifyDataSetChanged();
-						//图片文件夹数据
-						mFolderList=new ArrayList<>(mediaFolderList);
-						mImageFolderPopupWindow=new ImageFolderPopupWindow(ImagePickActivity.this, mFolderList);
-						mImageFolderPopupWindow.setAnimationStyle(R.style.imageFolderAnimator);
-						mImageFolderPopupWindow.getAdapter().setOnImageFolderChangeListener(ImagePickActivity.this);
-						mImageFolderPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener()
-						{
-							@Override
-							public void onDismiss(){
-								setLightMode(LIGHT_ON);
-							}
-						});
-						updateCommitButton();
+		Runnable task = null;
+		MediaLoadCallback cb = new MediaLoadCallback()
+		{
+			@Override
+			public void onMediaLoad(final List<MediaFolder> list){
+				runOnUiThread(new Runnable()
+				{
+					@Override
+					public void run(){
+						if(!list.isEmpty()){
+							//默认加载全部照片
+							mFileList.addAll(list.get(0).getMediaFileList());
+							mAdapter.notifyDataSetChanged();
+							//图片文件夹数据
+							mFolderList = new ArrayList<>(list);
+							mPopupWindow =
+								new ImageFolderPopupWindow(ImagePickActivity.this, mFolderList);
+							mPopupWindow.setAnimationStyle(R.style.imageFolderAnimator);
+							mPopupWindow
+								.getAdapter()
+								.setOnImageFolderChangeListener(ImagePickActivity.this);
+							mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener()
+							{
+								@Override
+								public void onDismiss(){
+									setLightMode(LIGHT_ON);
+								}
+							});
+							updateCommitButton();
+						}
+						mProgressDialog.cancel();
 					}
-					mProgressDialog.cancel();
-				}
-			});
+				});
+			}
+		};
+		if(mShowImage){
+			if(!mShowVideo){
+				task = new ImageLoadTask(this, cb).showGif(mShowGif); //只加载图片
+			}
+		}else{
+			if(mShowVideo){
+				task = new VideoLoadTask(this, cb); //只加载视频
+			}
 		}
+		if(task==null) task = new MediaLoadTask(this, cb).showGif(mShowGif); //照片、视频全部加载
+		CommonExecutor.getInstance().execute(task);
 	}
 	
 	/**
-	 隐藏时间
+	 * 隐藏时间
 	 */
 	private void hideImageTime(){
-		if(isShowTime){
-			isShowTime=false;
-			ObjectAnimator.ofFloat(mTvImageTime, "alpha", 1, 0).setDuration(300).start();
+		if(showTime){
+			showTime = false;
+			ObjectAnimator.ofFloat(tvImageTime, "alpha", 1, 0).setDuration(300).start();
 		}
 	}
 	
 	/**
-	 显示时间
+	 * 显示时间
 	 */
 	private void showImageTime(){
-		if(!isShowTime){
-			isShowTime=true;
-			ObjectAnimator.ofFloat(mTvImageTime, "alpha", 0, 1).setDuration(300).start();
+		if(!showTime){
+			showTime = true;
+			ObjectAnimator.ofFloat(tvImageTime, "alpha", 0, 1).setDuration(300).start();
 		}
 	}
 	
 	/**
-	 更新时间
+	 * 更新时间
 	 */
 	private void updateImageTime(){
-		int position=mGridLayoutManager.findFirstVisibleItemPosition();
+		int position = vGrid.findFirstVisibleItemPosition();
 		if(position!=RecyclerView.NO_POSITION){
-			MediaFile mediaFile=mAdapter.getMediaFile(position);
+			MediaFile mediaFile = mAdapter.getMediaFile(position);
 			if(mediaFile!=null){
-				if(mTvImageTime.getVisibility()!=View.VISIBLE){
-					mTvImageTime.setVisibility(View.VISIBLE);
+				if(tvImageTime.getVisibility()!=View.VISIBLE){
+					tvImageTime.setVisibility(View.VISIBLE);
 				}
-				String time=Utils.getImageTime(mediaFile.getDateToken());
-				mTvImageTime.setText(time);
+				String time = Utils.getImageTime(mediaFile.getDateToken());
+				tvImageTime.setText(time);
 				showImageTime();
 				mMyHandler.removeCallbacks(mHideRunnable);
 				mMyHandler.postDelayed(mHideRunnable, 1500);
@@ -339,31 +333,33 @@ public class ImagePickActivity extends ImageBaseActivity
 	}
 	
 	/**
-	 设置屏幕的亮度模式
+	 * 设置屏幕的亮度模式
 	 */
 	private void setLightMode(int lightMode){
-		WindowManager.LayoutParams layoutParams=getWindow().getAttributes();
+		WindowManager.LayoutParams layoutParams = getWindow().getAttributes();
 		switch(lightMode){
 		case LIGHT_OFF:
-			layoutParams.alpha=0.7f;
+			layoutParams.alpha = 0.7f;
 			break;
 		case LIGHT_ON:
-			layoutParams.alpha=1.0f;
+			layoutParams.alpha = 1.0f;
 			break;
 		}
 		getWindow().setAttributes(layoutParams);
 	}
 	
 	/**
-	 点击图片
+	 * 点击图片
 	 */
-	@Override
 	public void onMediaClick(View view, int position){
-		if(isShowCamera){
+		if(mShowCamera){
 			if(position==0){
 				if(!SelectionManager.getInstance().isCanChoose()){
-					Toast.makeText(this, String.format(getString(R.string.select_image_max), mMaxCount),
-							Toast.LENGTH_SHORT).show();
+					Toast
+						.makeText(this,
+							String.format(getString(R.string.select_image_max), mMaxCount),
+							Toast.LENGTH_SHORT)
+						.show();
 					return;
 				}
 				showCamera();
@@ -372,26 +368,26 @@ public class ImagePickActivity extends ImageBaseActivity
 		}
 		if(mFileList!=null){
 			DataUtil.getInstance().setMediaData(mFileList);
-			Intent intent=new Intent(this, ImagePrePickActivity.class).putExtras(mCrop);
-			if(isShowCamera){
-				intent.putExtra(ImagePreview.KEY_POSITION, position-1);
-			}else{
-				intent.putExtra(ImagePreview.KEY_POSITION, position);
-			}
+			Intent intent = new Intent(this, ImagePickActivity2.class);
+			intent.putExtras(getIntent());
+			K1.ITEMS.set(intent, null);
+			K3.INDEX.set(intent, mShowCamera? position-1: position);
 			startActivityForResult(intent, REQ_PREVIEW);
 		}
 	}
 	
 	/**
-	 选中/取消选中图片
+	 * 选中/取消选中图片
 	 */
-	@Override
 	public void onMediaCheck(View view, int position){
-		if(isShowCamera){
+		if(mShowCamera){
 			if(position==0){
 				if(!SelectionManager.getInstance().isCanChoose()){
-					Toast.makeText(this, String.format(getString(R.string.select_image_max), mMaxCount),
-							Toast.LENGTH_SHORT).show();
+					Toast
+						.makeText(this,
+							String.format(getString(R.string.select_image_max), mMaxCount),
+							Toast.LENGTH_SHORT)
+						.show();
 					return;
 				}
 				showCamera();
@@ -399,131 +395,152 @@ public class ImagePickActivity extends ImageBaseActivity
 			}
 		}
 		//执行选中/取消操作
-		MediaFile mediaFile=mAdapter.getMediaFile(position);
+		MediaFile mediaFile = mAdapter.getMediaFile(position);
 		if(mediaFile!=null){
-			String imagePath=mediaFile.getPath();
-			if(isSingleType){
+			String imagePath = mediaFile.getPath();
+			if(mMaxCount==1){
 				//如果是单类型选取，判断添加类型是否满足（照片视频不能共存）
-				List<String> list=SelectionManager.getInstance().getSelectList();
+				List<String> list = SelectionManager.getInstance().getList();
 				if(!list.isEmpty()){
 					//判断选中集合中第一项是否为视频
 					if(!SelectionManager.isCanAddSelectionPaths(imagePath, list.get(0))){
 						//类型不同
-						Toast.makeText(this, getString(R.string.single_type_choose), Toast.LENGTH_SHORT).show();
+						Toast
+							.makeText(this, getString(R.string.single_type_choose),
+								Toast.LENGTH_SHORT)
+							.show();
 						return;
 					}
 				}
 			}
-			boolean ok=SelectionManager.getInstance().select(imagePath);
+			boolean ok = SelectionManager.getInstance().select(imagePath);
 			if(!ok){
-				Toast.makeText(this, getString(R.string.select_image_max, mMaxCount), Toast.LENGTH_SHORT).show();
+				Toast
+					.makeText(this, getString(R.string.select_image_max, mMaxCount),
+						Toast.LENGTH_SHORT)
+					.show();
 				return;
 			}
 			if(mCheckItem!=-1 && mCheckItem!=position) mAdapter.notifyItemChanged(mCheckItem);
 			mAdapter.notifyItemChanged(position);
-			mCheckItem=position;
+			mCheckItem = position;
 		}
 		updateCommitButton();
 	}
 	
+	boolean checkCrop(){
+		if(mShowVideo) return false;
+		return ImageCrop.checkIntent(getIntent());
+	}
+	
 	/**
-	 更新确认按钮状态
+	 * 更新确认按钮状态
 	 */
 	private void updateCommitButton(){
 		//改变确定按钮UI
-		int selectCount=SelectionManager.getInstance().getSelectList().size();
+		int selectCount = SelectionManager.getInstance().getList().size();
 		if(selectCount==0){
-			mTvCommit.setEnabled(false);
-			if(mCrop.needCrop()){
-				mTvCommit.setText(R.string.confirm_next);
+			tvSubmit.setEnabled(false);
+			if(checkCrop()){
+				tvSubmit.setText(R.string.confirm_next);
 				return;
 			}
-			mTvCommit.setText(getString(R.string.confirm));
+			tvSubmit.setText(getString(R.string.confirm));
 			return;
 		}
 		if(selectCount<mMaxCount){
-			mTvCommit.setEnabled(true);
-			mTvCommit.setText(String.format(getString(R.string.confirm_msg), selectCount, mMaxCount));
+			tvSubmit.setEnabled(true);
+			tvSubmit.setText(
+				String.format(getString(R.string.confirm_msg), selectCount, mMaxCount));
 			return;
 		}
 		if(selectCount==mMaxCount){
-			mTvCommit.setEnabled(true);
+			tvSubmit.setEnabled(true);
 			if(mMaxCount==1){
-				if(mCrop.needCrop()){
-					mTvCommit.setText(R.string.confirm_next);
+				if(checkCrop()){
+					tvSubmit.setText(R.string.confirm_next);
 					return;
 				}
 			}
-			mTvCommit.setText(String.format(getString(R.string.confirm_msg), selectCount, mMaxCount));
+			tvSubmit.setText(
+				String.format(getString(R.string.confirm_msg), selectCount, mMaxCount));
 			return;
 		}
 	}
 	
 	void clickCommit(){
-		if(mCrop.needCrop()){
-			String image=SelectionManager.getInstance().getSelectList().get(0);
-			startActivityForResult(mCrop.setImage(image).intent(getContext()), REQ_CROP);
+		if(checkCrop()){
+			String image = SelectionManager.getInstance().getList().get(0);
+			ImageCrop
+				.with(this)
+				.set(getIntent())
+				.set(K1.ITEMS, null)
+				.set(K2.IMAGE, image)
+				.start(REQ_CROP);
 			return;
 		}
-		ImagePicker.commitSelection(getActivity());
+		List<String> list = SelectionManager.getInstance().getList();
+		ImagePick.submit(getActivity(), list);
 	}
 	
 	/**
-	 跳转相机拍照
+	 * 跳转相机拍照
 	 */
 	private void showCamera(){
-		if(isSingleType){
+		if(mMaxCount==1){
 			//如果是单类型选取，判断添加类型是否满足（照片视频不能共存）
-			List<String> list=SelectionManager.getInstance().getSelectList();
+			List<String> list = SelectionManager.getInstance().getList();
 			if(!list.isEmpty()){
 				if(MediaFileUtil.isVideoFileType(list.get(0))){
 					//如果存在视频，就不能拍照了
-					Toast.makeText(this, getString(R.string.single_type_choose), Toast.LENGTH_SHORT).show();
+					Toast
+						.makeText(this, getString(R.string.single_type_choose), Toast.LENGTH_SHORT)
+						.show();
 					return;
 				}
 			}
 		}
 		//拍照存放路径
-		File fileDir=new File(Environment.getExternalStorageDirectory(), "DCIM/Camera");
+		File fileDir = new File(Environment.getExternalStorageDirectory(), "DCIM/Camera");
 		fileDir.mkdir();
-		File file=Utils.createFile(fileDir, "", ".jpg");
-		mFilePath=file.getAbsolutePath();
-		Intent intent=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		File file = Utils.createFile(fileDir, "", ".jpg");
+		mFilePath = file.getAbsolutePath();
+		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		Uri uri;
-		if(Build.VERSION.SDK_INT<24) uri=Uri.fromFile(file);
-		else uri=FileProvider.getUriForFile(this, ImageFileProvider.getFileProviderName(this), file);
+		if(Build.VERSION.SDK_INT<24) uri = Uri.fromFile(file);
+		else uri = ImagePickFileProvider.toUri(this, file);
 		intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
 		startActivityForResult(intent, REQ_CAPTURE);
 	}
 	
 	/**
-	 当图片文件夹切换时，刷新图片列表数据源
+	 * 当图片文件夹切换时，刷新图片列表数据源
 	 */
 	@Override
 	public void onImageFolderChange(View view, int position){
-		MediaFolder mediaFolder=mFolderList.get(position);
+		MediaFolder mediaFolder = mFolderList.get(position);
 		//更新当前文件夹名
-		String folderName=mediaFolder.getFolderName();
+		String folderName = mediaFolder.getFolderName();
 		if(!TextUtils.isEmpty(folderName)){
-			mTvImageFolders.setText(folderName);
+			tvFolders.setText(folderName);
 		}
 		//更新图片列表数据源
 		mFileList.clear();
 		mFileList.addAll(mediaFolder.getMediaFileList());
 		mAdapter.notifyDataSetChanged();
-		mImageFolderPopupWindow.dismiss();
+		mPopupWindow.dismiss();
 	}
 	
 	/**
-	 拍照回调
+	 * 拍照回调
 	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent){
 		if(resultCode!=RESULT_OK) return;
 		switch(requestCode){
 		case REQ_CAPTURE:
-			//通知媒体库刷新
-			sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://"+mFilePath)));
+			Uri uri = Uri.parse("file://"+mFilePath); //通知媒体库刷新
+			sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
 			//添加到选中集合
 			SelectionManager.getInstance().select(mFilePath);
 			clickCommit();
@@ -532,9 +549,8 @@ public class ImagePickActivity extends ImageBaseActivity
 			clickCommit();
 			break;
 		case REQ_CROP:
-			String image=ImageCrop.from(intent).getImage();
-			SelectionManager.getInstance().getSelectList().set(0, image);
-			ImagePicker.commitSelection(this);
+			String image = K2.IMAGE.get(intent, null);
+			ImagePick.submit(this, Arrays.asList(image));
 			break;
 		}
 	}
@@ -555,8 +571,199 @@ public class ImagePickActivity extends ImageBaseActivity
 	@Override
 	protected void onDestroy(){
 		super.onDestroy();
-		ImagePicker.getInstance().setCrop(false);
-		ConfigManager.getInstance().clear(this);
 		SelectionManager.getInstance().removeAll();
+	}
+	
+	class Adapter extends RecyclerView.Adapter<Adapter.BaseHolder>
+	{
+		private List<MediaFile> mMediaFileList;
+		
+		public Adapter(List<MediaFile> list){
+			this.mMediaFileList = list;
+		}
+		
+		@Override
+		public int getItemViewType(int position){
+			if(mShowCamera){
+				if(position==0){
+					return ItemType.ITEM_TYPE_CAMERA;
+				}
+				//如果有相机存在，position位置需要-1
+				position--;
+			}
+			if(mMediaFileList.get(position).getDuration()>0){
+				return ItemType.ITEM_TYPE_VIDEO;
+			}else{
+				return ItemType.ITEM_TYPE_IMAGE;
+			}
+		}
+		
+		@Override
+		public int getItemCount(){
+			if(mMediaFileList==null){
+				return 0;
+			}
+			return mShowCamera? mMediaFileList.size()+1: mMediaFileList.size();
+		}
+		
+		/**
+		 * 获取item所对应的数据源
+		 */
+		public MediaFile getMediaFile(int position){
+			if(mShowCamera){
+				if(position==0){
+					return null;
+				}
+				return mMediaFileList.get(position-1);
+			}
+			return mMediaFileList.get(position);
+		}
+		
+		@NonNull
+		@Override
+		public BaseHolder onCreateViewHolder(ViewGroup vg, int viewType){
+			Context ctxt = vg.getContext();
+			View view;
+			if(viewType==ItemType.ITEM_TYPE_CAMERA){
+				view = LayoutInflater.from(ctxt).inflate(R.layout.item_recyclerview_camera, null);
+				return new BaseHolder(view);
+			}
+			if(viewType==ItemType.ITEM_TYPE_IMAGE){
+				view = LayoutInflater.from(ctxt).inflate(R.layout.item_recyclerview_image, null);
+				return new ImageHolder(view);
+			}
+			if(viewType==ItemType.ITEM_TYPE_VIDEO){
+				view = LayoutInflater.from(ctxt).inflate(R.layout.item_recyclerview_video, null);
+				return new VideoHolder(view);
+			}
+			return null;
+		}
+		
+		@Override
+		public void onBindViewHolder(@NonNull BaseHolder holder, final int position){
+			int itemType = getItemViewType(position);
+			MediaFile mediaFile = getMediaFile(position);
+			switch(itemType){
+			//图片、视频Item
+			case ItemType.ITEM_TYPE_IMAGE:
+			case ItemType.ITEM_TYPE_VIDEO:
+				MediaHolder mediaHolder = (MediaHolder)holder;
+				bindMedia(mediaHolder, mediaFile);
+				break;
+			//相机Item
+			default:
+				break;
+			}
+			//设置点击事件监听
+			holder.mSquareRelativeLayout.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(View view){
+					onMediaClick(view, position);
+				}
+			});
+			if(holder instanceof MediaHolder){
+				((MediaHolder)holder).mImageCheck.setOnClickListener(new View.OnClickListener()
+				{
+					@Override
+					public void onClick(View view){
+						onMediaCheck(view, position);
+					}
+				});
+			}
+		}
+		
+		/**
+		 * 绑定数据（图片、视频）
+		 */
+		private void bindMedia(MediaHolder h, MediaFile mediaFile){
+			Context ctxt = h.itemView.getContext();
+			String imagePath = mediaFile.getPath();
+			if(!TextUtils.isEmpty(imagePath)){
+				//选择状态（仅是UI表现，真正数据交给SelectionManager管理）
+				if(SelectionManager.getInstance().isImageSelect(imagePath)){
+					h.mImageView.setColorFilter(Color.parseColor("#77000000"));
+					h.mImageCheck.setImageDrawable(
+						ctxt.getResources().getDrawable(R.mipmap.icon_image_checked));
+				}else{
+					h.mImageView.setColorFilter(null);
+					h.mImageCheck.setImageDrawable(
+						ctxt.getResources().getDrawable(R.mipmap.icon_image_check));
+				}
+				try{
+					getImageLoader(null).loadImage(h.mImageView, imagePath);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				if(h instanceof ImageHolder){
+					//如果是gif图，显示gif标识
+					String suffix = imagePath.substring(imagePath.lastIndexOf(".")+1);
+					if(suffix.toUpperCase().equals("GIF")){
+						((ImageHolder)h).mImageGif.setVisibility(View.VISIBLE);
+					}else{
+						((ImageHolder)h).mImageGif.setVisibility(View.GONE);
+					}
+				}
+				if(h instanceof VideoHolder){
+					//如果是视频，需要显示视频时长
+					String duration = Utils.getVideoDuration(mediaFile.getDuration());
+					((VideoHolder)h).mVideoDuration.setText(duration);
+				}
+			}
+		}
+		
+		/**
+		 * 图片Item
+		 */
+		class ImageHolder extends MediaHolder
+		{
+			public ImageView mImageGif;
+			
+			public ImageHolder(View itemView){
+				super(itemView);
+				mImageGif = itemView.findViewById(R.id.iv_item_gif);
+			}
+		}
+		
+		/**
+		 * 视频Item
+		 */
+		class VideoHolder extends MediaHolder
+		{
+			TextView mVideoDuration;
+			
+			VideoHolder(View itemView){
+				super(itemView);
+				mVideoDuration = itemView.findViewById(R.id.tv_item_videoDuration);
+			}
+		}
+		
+		/**
+		 * 媒体Item
+		 */
+		class MediaHolder extends BaseHolder
+		{
+			SquareImageView mImageView;
+			ImageView mImageCheck;
+			
+			MediaHolder(View itemView){
+				super(itemView);
+				mImageView = itemView.findViewById(R.id.iv_item_image);
+				mImageCheck = itemView.findViewById(R.id.image_item_check);
+			}
+		}
+		
+		/**
+		 * 基础Item
+		 */
+		class BaseHolder extends RecyclerView.ViewHolder
+		{
+			SquareRelativeLayout mSquareRelativeLayout;
+			
+			BaseHolder(View itemView){
+				super(itemView);
+				mSquareRelativeLayout = itemView.findViewById(R.id.srl_item);
+			}
+		}
 	}
 }

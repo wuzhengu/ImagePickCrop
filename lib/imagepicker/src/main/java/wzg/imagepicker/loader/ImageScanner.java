@@ -4,13 +4,21 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.provider.MediaStore.Images;
+import android.provider.MediaStore.Images.Media;
 import wzg.imagepicker.data.MediaFile;
-import wzg.imagepicker.manager.ConfigManager;
 
 public class ImageScanner extends AbsMediaScanner<MediaFile>
 {
+	private boolean mShowGif;
+	
 	public ImageScanner(Context context){
 		super(context);
+	}
+	
+	public ImageScanner setShowGif(boolean show){
+		mShowGif = show;
+		return this;
 	}
 	
 	@Override
@@ -21,27 +29,24 @@ public class ImageScanner extends AbsMediaScanner<MediaFile>
 	@Override
 	protected String[] getProjection(){
 		return new String[]{
-				MediaStore.Images.Media.DATA, MediaStore.Images.Media.MIME_TYPE, MediaStore.Images.Media.BUCKET_ID,
-				MediaStore.Images.Media.BUCKET_DISPLAY_NAME, MediaStore.Images.Media.DATE_TAKEN
+			MediaStore.Images.Media.DATA,
+			MediaStore.Images.Media.MIME_TYPE,
+			MediaStore.Images.Media.BUCKET_ID,
+			MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+			MediaStore.Images.Media.DATE_TAKEN
 		};
 	}
 	
 	@Override
 	protected String getSelection(){
-		if(ConfigManager.getInstance().isFilterGif()){
-			//过滤GIF
-			return MediaStore.Images.Media.MIME_TYPE+"=? or "+MediaStore.Images.Media.MIME_TYPE+"=?";
-		}
-		return MediaStore.Images.Media.MIME_TYPE+"=? or "+MediaStore.Images.Media.MIME_TYPE+"=?"+" or "+
-		       MediaStore.Images.Media.MIME_TYPE+"=?";
+		String s = Images.Media.MIME_TYPE+"=? or "+Images.Media.MIME_TYPE+"=?";
+		if(mShowGif) s += " or "+Media.MIME_TYPE+"=?";
+		return s;
 	}
 	
 	@Override
 	protected String[] getSelectionArgs(){
-		if(ConfigManager.getInstance().isFilterGif()){
-			//过滤GIF
-			return new String[]{"image/jpeg", "image/png"};
-		}
+		if(!mShowGif) return new String[]{"image/jpeg", "image/png"};
 		return new String[]{"image/jpeg", "image/png", "image/gif"};
 	}
 	
@@ -51,16 +56,17 @@ public class ImageScanner extends AbsMediaScanner<MediaFile>
 	}
 	
 	/**
-	 构建媒体对象
+	 * 构建媒体对象
 	 */
 	@Override
 	protected MediaFile parse(Cursor cursor){
-		String path=cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-		String mime=cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE));
-		Integer folderId=cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_ID));
-		String folderName=cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
-		long dateToken=cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN));
-		MediaFile mediaFile=new MediaFile();
+		String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+		String mime = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.MIME_TYPE));
+		Integer folderId = cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_ID));
+		String folderName =
+			cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.BUCKET_DISPLAY_NAME));
+		long dateToken = cursor.getLong(cursor.getColumnIndex(MediaStore.Images.Media.DATE_TAKEN));
+		MediaFile mediaFile = new MediaFile();
 		mediaFile.setPath(path);
 		mediaFile.setMime(mime);
 		mediaFile.setFolderId(folderId);

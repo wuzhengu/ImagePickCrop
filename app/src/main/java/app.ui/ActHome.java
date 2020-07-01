@@ -3,7 +3,13 @@ package app.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import java.util.List;
 import wzg.app.R;
+import wzg.imagepicker.ImageCrop.K2;
+import wzg.imagepicker.ImagePick;
+import wzg.imagepicker.ImagePick.K1;
+import wzg.imagepicker.ImagePreview;
+import wzg.imagepicker.ImagePreview.K3;
 
 public class ActHome extends BaseActivity
 {
@@ -23,23 +29,22 @@ public class ActHome extends BaseActivity
 	}
 	
 	void clickStart(){
-		//ImagePicker.getInstance()
-		//		.setImageLoader(new DefaultImageLoader())
-		//		.setCrop(true) //需要裁剪
-		//		.showCamera(true) //显示相机
-		//		.showImage(true) //显示图片
-		//		.showVideo(false) //显示视频
-		//		.setCropSize(360, 360) //裁剪宽高
-		//		.setCropDir("sdcard/DCIM/test") //保存路径
-		//		.start(this, REQ_PICK);
+		ImagePick.with(this)
+			.set(K1.SHOW_CAMERA, true) //显示相机
+			.set(K1.SHOW_IMAGE, true) //显示图片
+			.set(K1.SHOW_VIDEO, false) //隐藏视频
+			.set(K2.WIDTH, 360) //裁剪宽度
+			.set(K2.HEIGHT, 360) //裁剪高度
+			.set(K2.DIR, "sdcard/DCIM/test") //保存路径
+			.start(REQ_PICK);
 	}
 	
 	@Override
 	public void onActivityResult(int reqCode, int resCode, Intent intent){
 		if(resCode!=RESULT_OK) return;
 		if(reqCode==REQ_PICK){
-			//List<String> list=intent.getStringArrayListExtra(ImagePicker.EXTRA_SELECT_IMAGES);
-			//startActivity(new ImagePreview().setImages(list).intent(getContext())); //浏览选取的图片
+			List<String> list = K1.ITEMS.get(intent, null);
+			ImagePreview.with(this).set(K3.ITEMS, list).start(-1); //浏览选取的图片
 		}
 	}
 }

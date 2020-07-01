@@ -15,7 +15,7 @@
 			android:name="wzg.imagepicker.ui.ImagePickActivity"
 			/>
 		<activity
-			android:name="wzg.imagepicker.ui.ImagePrePickActivity"
+			android:name="wzg.imagepicker.ui.ImagePickActivity2"
 			/>
 		<activity
 			android:name="wzg.imagepicker.ui.ImageCropActivity"
@@ -25,14 +25,14 @@
 			/>
 		
 		<provider
-			android:name="wzg.imagepicker.ImageFileProvider"
-			android:authorities="${applicationId}.ImageFileProvider"
+			android:name="wzg.imagepicker.content.ImagePickFileProvider"
+			android:authorities="${applicationId}.ImagePickFileProvider"
 			android:exported="false"
 			android:grantUriPermissions="true"
 			>
 			<meta-data
 				android:name="android.support.FILE_PROVIDER_PATHS"
-				android:resource="@xml/image_picker"
+				android:resource="@xml/file_provider"
 				/>
 		</provider>
 	</application>

@@ -33,7 +33,7 @@ public class CommonExecutor
 		return mCommonExecutor;
 	}
 
-	public void execute(Runnable runnable){
-		mExecutorService.execute(runnable);
+	public void execute(Runnable task){
+		mExecutorService.execute(task);
 	}
 }

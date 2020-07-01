@@ -3,7 +3,6 @@ package wzg.imagepicker.task;
 import android.content.Context;
 import java.util.ArrayList;
 import wzg.imagepicker.data.MediaFile;
-import wzg.imagepicker.listener.MediaLoadCallback;
 import wzg.imagepicker.loader.MediaHandler;
 import wzg.imagepicker.loader.VideoScanner;
 
@@ -27,7 +26,7 @@ public class VideoLoadTask implements Runnable
 			videoFileList=mVideoScanner.queryMedia();
 		}
 		if(mMediaLoadCallback!=null){
-			mMediaLoadCallback.loadMediaSuccess(MediaHandler.getVideoFolder(mContext, videoFileList));
+			mMediaLoadCallback.onMediaLoad(MediaHandler.getVideoFolder(mContext, videoFileList));
 		}
 	}
 }

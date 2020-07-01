@@ -6,55 +6,56 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.List;
-import wzg.imagepicker.pkg.R;
 import wzg.imagepicker.data.MediaFolder;
-import wzg.imagepicker.manager.ConfigManager;
+import wzg.imagepicker.pkg.R;
+import wzg.imagepicker.ui.ImagePickActivity;
 
 public class ImageFoldersAdapter extends RecyclerView.Adapter<ImageFoldersAdapter.ViewHolder>
 {
-	private Context mContext;
 	private List<MediaFolder> mMediaFolderList;
 	private int mCurrentImageFolderIndex;
 	
-	public ImageFoldersAdapter(Context context, List<MediaFolder> mediaFolderList, int position){
-		this.mContext=context;
-		this.mMediaFolderList=mediaFolderList;
+	public ImageFoldersAdapter(List<MediaFolder> list, int position){
+		this.mMediaFolderList=list;
 		this.mCurrentImageFolderIndex=position;
 	}
 	
 	@NonNull
 	@Override
-	public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType){
-		return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.item_recyclerview_folder, null));
+	public ViewHolder onCreateViewHolder(ViewGroup vg, int viewType){
+		LayoutInflater inflater = LayoutInflater.from(vg.getContext());
+		return new ViewHolder(inflater.inflate(R.layout.item_recyclerview_folder, null));
 	}
 	
 	@Override
-	public void onBindViewHolder(@NonNull ViewHolder holder, final int position){
+	public void onBindViewHolder(ViewHolder h, final int position){
+		Context ctxt = h.itemView.getContext();
 		final MediaFolder mediaFolder=mMediaFolderList.get(position);
 		String folderCover=mediaFolder.getFolderCover();
 		String folderName=mediaFolder.getFolderName();
 		int imageSize=mediaFolder.getMediaFileList().size();
 		if(!TextUtils.isEmpty(folderName)){
-			holder.mFolderName.setText(folderName);
+			h.mFolderName.setText(folderName);
 		}
-		holder.mImageSize.setText(String.format(mContext.getString(R.string.image_num), imageSize));
+		h.mImageSize.setText(String.format(ctxt.getString(R.string.image_num), imageSize));
 		if(mCurrentImageFolderIndex==position){
-			holder.mImageFolderCheck.setVisibility(View.VISIBLE);
+			h.mImageFolderCheck.setVisibility(View.VISIBLE);
 		}else{
-			holder.mImageFolderCheck.setVisibility(View.GONE);
+			h.mImageFolderCheck.setVisibility(View.GONE);
 		}
 		//加载图片
 		try{
-			ConfigManager.getInstance().getImageLoader().loadImage(holder.mImageCover, folderCover);
+			ImagePickActivity.getImageLoader(null).loadImage(h.mImageCover, folderCover);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		if(mImageFolderChangeListener!=null){
-			holder.itemView.setOnClickListener(new View.OnClickListener()
+			h.itemView.setOnClickListener(new OnClickListener()
 			{
 				@Override
 				public void onClick(View view){

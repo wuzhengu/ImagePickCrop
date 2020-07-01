@@ -35,7 +35,8 @@ public class ImageFolderPopupWindow extends PopupWindow
 		View view=LayoutInflater.from(mContext).inflate(R.layout.image_folders, null);
 		mRecyclerView=view.findViewById(R.id.rv_main_imageFolders);
 		mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
-		mImageFoldersAdapter=new ImageFoldersAdapter(mContext, mMediaFolderList, DEFAULT_IMAGE_FOLDER_SELECT);
+		mImageFoldersAdapter=new ImageFoldersAdapter(mMediaFolderList, DEFAULT_IMAGE_FOLDER_SELECT
+		);
 		mRecyclerView.setAdapter(mImageFoldersAdapter);
 		initPopupWindow(view);
 	}

@@ -7,7 +7,7 @@ import wzg.imagepicker.utils.MediaFileUtil;
 public class SelectionManager
 {
 	private static volatile SelectionManager mSelectionManager;
-	private ArrayList<String> mSelectImages=new ArrayList<>();
+	private ArrayList<String> mList =new ArrayList<>();
 	private int mMaxCount=1;
 
 	private SelectionManager(){
@@ -41,20 +41,20 @@ public class SelectionManager
 	/**
 	 获取当前所选图片集合path
 	 */
-	public List<String> getSelectList(){
-		return mSelectImages;
+	public List<String> getList(){
+		return mList;
 	}
 
 	/**
 	 添加/移除图片到选择集合
 	 */
 	public boolean select(String imagePath){
-		if(mSelectImages.contains(imagePath)){
-			return mSelectImages.remove(imagePath);
+		if(mList.contains(imagePath)){
+			return mList.remove(imagePath);
 		}else{
-			if(mMaxCount==1) mSelectImages.clear();
-			if(mSelectImages.size()<mMaxCount){
-				return mSelectImages.add(imagePath);
+			if(mMaxCount==1) mList.clear();
+			if(mList.size()<mMaxCount){
+				return mList.add(imagePath);
 			}else{
 				return false;
 			}
@@ -64,12 +64,10 @@ public class SelectionManager
 	/**
 	 添加图片到选择集合
 	 */
-	public void select(List<String> images){
-		if(images==null) return;
-		for(String image : images){
-			if(!mSelectImages.contains(image) && mSelectImages.size()<mMaxCount){
-				mSelectImages.add(image);
-			}
+	public void select(List<String> list){
+		if(list==null || list.isEmpty()) return;
+		for(String image : list){
+			if(mList.size()<mMaxCount && !mList.contains(image)) mList.add(image);
 		}
 	}
 
@@ -77,7 +75,7 @@ public class SelectionManager
 	 判断当前图片是否被选择
 	 */
 	public boolean isImageSelect(String imagePath){
-		if(mSelectImages.contains(imagePath)){
+		if(mList.contains(imagePath)){
 			return true;
 		}else{
 			return false;
@@ -88,7 +86,7 @@ public class SelectionManager
 	 是否还可以继续选择图片
 	 */
 	public boolean isCanChoose(){
-		if(getSelectList().size()<mMaxCount){
+		if(getList().size()<mMaxCount){
 			return true;
 		}
 		return false;
@@ -109,6 +107,6 @@ public class SelectionManager
 	 清除已选图片
 	 */
 	public void removeAll(){
-		mSelectImages.clear();
+		mList.clear();
 	}
 }

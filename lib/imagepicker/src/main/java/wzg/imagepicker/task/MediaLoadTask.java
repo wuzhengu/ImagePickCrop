@@ -3,7 +3,6 @@ package wzg.imagepicker.task;
 import android.content.Context;
 import java.util.ArrayList;
 import wzg.imagepicker.data.MediaFile;
-import wzg.imagepicker.listener.MediaLoadCallback;
 import wzg.imagepicker.loader.ImageScanner;
 import wzg.imagepicker.loader.MediaHandler;
 import wzg.imagepicker.loader.VideoScanner;
@@ -21,6 +20,11 @@ public class MediaLoadTask implements Runnable
 		mImageScanner=new ImageScanner(context);
 		mVideoScanner=new VideoScanner(context);
 	}
+	
+	public MediaLoadTask showGif(boolean show){
+		mImageScanner.setShowGif(show);
+		return this;
+	}
 
 	@Override
 	public void run(){
@@ -35,7 +39,7 @@ public class MediaLoadTask implements Runnable
 			videoFileList=mVideoScanner.queryMedia();
 		}
 		if(mMediaLoadCallback!=null){
-			mMediaLoadCallback.loadMediaSuccess(MediaHandler.getMediaFolder(mContext, imageFileList, videoFileList));
+			mMediaLoadCallback.onMediaLoad(MediaHandler.getMediaFolder(mContext, imageFileList, videoFileList));
 		}
 	}
 }
