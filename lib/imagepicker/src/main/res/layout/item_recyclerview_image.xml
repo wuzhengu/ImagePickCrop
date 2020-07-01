@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<wzg.lib.imagepicker.view.SquareRelativeLayout
+<wzg.imagepicker.view.SquareRelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:id="@+id/srl_item"
 	android:layout_width="match_parent"
@@ -7,7 +7,7 @@
 	android:padding="1dp"
 	>
 	
-	<wzg.lib.imagepicker.view.SquareImageView
+	<wzg.imagepicker.view.SquareImageView
 		android:id="@+id/iv_item_image"
 		android:layout_width="match_parent"
 		android:layout_height="90dp"
@@ -37,4 +37,4 @@
 		android:src="@mipmap/icon_gif"
 		android:visibility="gone"
 		/>
-</wzg.lib.imagepicker.view.SquareRelativeLayout>
+</wzg.imagepicker.view.SquareRelativeLayout>

@@ -9,7 +9,7 @@
 	
 	<include layout="@layout/image_top_bar"/>
 	
-	<wzg.lib.imagepicker.view.CropImageView
+	<wzg.imagepicker.view.CropImageView
 		android:id="@+id/image_crop_view"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"

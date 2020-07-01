@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
 	xmlns:android="http://schemas.android.com/apk/res/android"
-	package="wzg.lib.imagepicker"
+	package="wzg.imagepicker.pkg"
 	>
 	
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -12,20 +12,20 @@
 		android:theme="@style/ImagePickerTheme"
 		>
 		<activity
-			android:name="wzg.lib.imagepicker.ui.ImagePickActivity"
+			android:name="wzg.imagepicker.ui.ImagePickActivity"
 			/>
 		<activity
-			android:name="wzg.lib.imagepicker.ui.ImagePrePickActivity"
+			android:name="wzg.imagepicker.ui.ImagePrePickActivity"
 			/>
 		<activity
-			android:name="wzg.lib.imagepicker.ui.ImageCropActivity"
+			android:name="wzg.imagepicker.ui.ImageCropActivity"
 			/>
 		<activity
-			android:name="wzg.lib.imagepicker.ui.ImagePreviewActivity"
+			android:name="wzg.imagepicker.ui.ImagePreviewActivity"
 			/>
 		
 		<provider
-			android:name="wzg.lib.imagepicker.ImageFileProvider"
+			android:name="wzg.imagepicker.ImageFileProvider"
 			android:authorities="${applicationId}.ImageFileProvider"
 			android:exported="false"
 			android:grantUriPermissions="true"
