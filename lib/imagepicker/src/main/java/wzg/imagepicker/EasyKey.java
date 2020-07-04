@@ -2,6 +2,7 @@ package wzg.imagepicker;
 
 import android.content.Intent;
 import android.os.Bundle;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public abstract class EasyKey<Value>
 {
 	public final String name;
 	
-	EasyKey(String name){
+	public EasyKey(String name){
 		this.name = name;
 	}
 	
@@ -49,7 +50,7 @@ public abstract class EasyKey<Value>
 	
 	public static class Int extends EasyKey<Integer>
 	{
-		Int(String key){
+		public Int(String key){
 			super(key);
 		}
 		
@@ -73,7 +74,7 @@ public abstract class EasyKey<Value>
 	
 	public static class Bool extends EasyKey<Boolean>
 	{
-		Bool(String key){
+		public Bool(String key){
 			super(key);
 		}
 		
@@ -97,7 +98,7 @@ public abstract class EasyKey<Value>
 	
 	public static class TextList extends EasyKey<List<String>>
 	{
-		TextList(String name){
+		public TextList(String name){
 			super(name);
 		}
 		
@@ -119,6 +120,29 @@ public abstract class EasyKey<Value>
 			else if(value instanceof ArrayList) list = (ArrayList<String>)value;
 			else list = new ArrayList<>(value);
 			intent.putStringArrayListExtra(name, list);
+		}
+	}
+	
+	public static class ObjList<T extends Serializable> extends EasyKey<List<T>>
+	{
+		public ObjList(String name){
+			super(name);
+		}
+		
+		@Override
+		public List<T> get(Intent intent, List<T> value){
+			try{
+				Object obj = getExtra(intent);
+				if(obj instanceof List) return (List<T>)obj;
+			}catch(Throwable ex){
+				ex.printStackTrace();
+			}
+			return value;
+		}
+		
+		@Override
+		public void set(Intent intent, List<T> value){
+			intent.putExtra(name, (Serializable)value);
 		}
 	}
 }

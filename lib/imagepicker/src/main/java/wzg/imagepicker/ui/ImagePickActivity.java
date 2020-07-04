@@ -32,7 +32,6 @@ import wzg.imagepicker.ImageCrop;
 import wzg.imagepicker.ImageCrop.K2;
 import wzg.imagepicker.ImagePick;
 import wzg.imagepicker.ImagePick.K1;
-import wzg.imagepicker.ImagePreview.K3;
 import wzg.imagepicker.adapter.ImageFoldersAdapter;
 import wzg.imagepicker.content.ImagePickFileProvider;
 import wzg.imagepicker.data.ItemType;
@@ -47,7 +46,7 @@ import wzg.imagepicker.task.ImageLoadTask;
 import wzg.imagepicker.task.MediaLoadCallback;
 import wzg.imagepicker.task.MediaLoadTask;
 import wzg.imagepicker.task.VideoLoadTask;
-import wzg.imagepicker.utils.DataUtil;
+import wzg.imagepicker.ui.ImagePick2Activity.K;
 import wzg.imagepicker.utils.MediaFileUtil;
 import wzg.imagepicker.utils.PermissionUtil;
 import wzg.imagepicker.utils.Utils;
@@ -355,11 +354,8 @@ public class ImagePickActivity extends ImageBaseActivity
 		if(mShowCamera){
 			if(position==0){
 				if(!SelectionManager.getInstance().isCanChoose()){
-					Toast
-						.makeText(this,
-							String.format(getString(R.string.select_image_max), mMaxCount),
-							Toast.LENGTH_SHORT)
-						.show();
+					String msg = getString(R.string.select_image_max, mMaxCount);
+					Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				showCamera();
@@ -367,11 +363,11 @@ public class ImagePickActivity extends ImageBaseActivity
 			}
 		}
 		if(mFileList!=null){
-			DataUtil.getInstance().setMediaData(mFileList);
-			Intent intent = new Intent(this, ImagePickActivity2.class);
+			Intent intent = new Intent(this, ImagePick2Activity.class);
 			intent.putExtras(getIntent());
 			K1.ITEMS.set(intent, null);
-			K3.INDEX.set(intent, mShowCamera? position-1: position);
+			K.ITEMS.set(intent, mFileList);
+			K.INDEX.set(intent, mShowCamera? position-1: position);
 			startActivityForResult(intent, REQ_PREVIEW);
 		}
 	}

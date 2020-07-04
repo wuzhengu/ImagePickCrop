@@ -15,7 +15,7 @@
 			android:name="wzg.imagepicker.ui.ImagePickActivity"
 			/>
 		<activity
-			android:name="wzg.imagepicker.ui.ImagePickActivity2"
+			android:name="wzg.imagepicker.ui.ImagePick2Activity"
 			/>
 		<activity
 			android:name="wzg.imagepicker.ui.ImageCropActivity"

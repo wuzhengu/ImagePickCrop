@@ -15,23 +15,30 @@ import android.widget.TextView;
 import android.widget.Toast;
 import java.io.File;
 import java.util.List;
+import wzg.imagepicker.EasyKey;
+import wzg.imagepicker.EasyKey.Int;
+import wzg.imagepicker.EasyKey.ObjList;
 import wzg.imagepicker.ImageCrop;
 import wzg.imagepicker.ImagePick.K1;
-import wzg.imagepicker.ImagePreview.K3;
 import wzg.imagepicker.adapter.ImagePageAdapter;
 import wzg.imagepicker.content.ImagePickFileProvider;
 import wzg.imagepicker.data.MediaFile;
 import wzg.imagepicker.manager.SelectionManager;
 import wzg.imagepicker.pkg.R;
-import wzg.imagepicker.utils.DataUtil;
 import wzg.imagepicker.view.PinchImageView;
 
 /**
  * Created by wuzhengu on 2020/02/01 <br/>
  * 大图查看及选择
  */
-public class ImagePickActivity2 extends ImageBaseActivity
+public class ImagePick2Activity extends ImageBaseActivity
 {
+	interface K
+	{
+		EasyKey.ObjList<MediaFile> ITEMS=new ObjList<>("PICK2_ITEMS");
+		EasyKey.Int INDEX=new Int("PICK2_INDEX");
+	}
+	
 	private TextView vTitleCenter;
 	private TextView vTitleRight;
 	private ViewPager vPager;
@@ -52,10 +59,10 @@ public class ImagePickActivity2 extends ImageBaseActivity
 	protected void onCreate(Bundle state){
 		super.onCreate(state);
 		Intent intent = getIntent();
-		mPosition = K3.INDEX.get(intent, 0);
+		mImageList = K.ITEMS.get(intent, null);
+		mPosition = K.INDEX.get(intent, 0);
 		mMaxCount = K1.MAX_COUNT.get(intent, 1);
 		mShowVideo = K1.SHOW_VIDEO.get(intent, true);
-		mImageList = DataUtil.getInstance().getMediaData();
 		vTitleCenter = findViewById(R.id.image_title_center);
 		vTitleRight = findViewById(R.id.image_title_right);
 		vPlay = findViewById(R.id.image_video_play);

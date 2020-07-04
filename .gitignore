@@ -64,4 +64,4 @@ fastlane/readme.md
 
 # Log Files
 *.log
-log*.txt
+.cache/

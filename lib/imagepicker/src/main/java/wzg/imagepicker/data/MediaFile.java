@@ -1,6 +1,8 @@
 package wzg.imagepicker.data;
 
-public class MediaFile
+import java.io.Serializable;
+
+public class MediaFile implements Serializable
 {
 	private String path;
 	private String mime;
