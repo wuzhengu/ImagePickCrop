@@ -21,6 +21,7 @@ public class ImagePick extends EasyIntent
 		EasyKey.Bool SHOW_IMAGE = new EasyKey.Bool("PICK_SHOW_IMAGE");
 		EasyKey.Bool SHOW_VIDEO = new EasyKey.Bool("PICK_SHOW_VIDEO");
 		EasyKey.Bool SHOW_GIF = new EasyKey.Bool("PICK_SHOW_GIF");
+		EasyKey.Bool MULTI_TYPE = new EasyKey.Bool("PICK_MULTI_TYPE");
 		EasyKey.Int MAX_COUNT = new EasyKey.Int("PICK_MAX_COUNT");
 		EasyKey.Text LOADER = new EasyKey.Text("PICK_LOADER");
 	}

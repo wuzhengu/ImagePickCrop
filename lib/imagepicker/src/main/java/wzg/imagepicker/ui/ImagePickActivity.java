@@ -380,11 +380,8 @@ public class ImagePickActivity extends ImageBaseActivity
 		if(mShowCamera){
 			if(position==0){
 				if(!SelectionManager.getInstance().isCanChoose()){
-					Toast
-						.makeText(this,
-							String.format(getString(R.string.select_image_max), mMaxCount),
-							Toast.LENGTH_SHORT)
-						.show();
+					String msg = getString(R.string.select_image_max, mMaxCount);
+					Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				showCamera();
