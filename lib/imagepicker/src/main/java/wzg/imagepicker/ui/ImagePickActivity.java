@@ -1,6 +1,7 @@
 package wzg.imagepicker.ui;
 
 import android.Manifest;
+import android.Manifest.permission;
 import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -16,6 +17,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -48,7 +50,6 @@ import wzg.imagepicker.task.MediaLoadTask;
 import wzg.imagepicker.task.VideoLoadTask;
 import wzg.imagepicker.ui.ImagePick2Activity.K;
 import wzg.imagepicker.utils.MediaFileUtil;
-import wzg.imagepicker.utils.PermissionUtil;
 import wzg.imagepicker.utils.Utils;
 import wzg.imagepicker.view.ImageFolderPopupWindow;
 import wzg.imagepicker.view.SquareImageView;
@@ -90,14 +91,17 @@ public class ImagePickActivity extends ImageBaseActivity
 	};
 	/** 拍照相关 */
 	private String mFilePath;
-	/** 权限相关 */
-	private static final int REQ_CAMERA_PERMISSION = 0x03;
 	/** 大图预览选择 */
 	private static final int REQ_PREVIEW = 0x01;
 	/** 点击拍照 */
 	private static final int REQ_CAPTURE = 0x02;
 	/** 裁剪图片 */
 	private static final int REQ_CROP = 0x03;
+	
+	/** 权限相关 */
+	private static final int REQ_PERMISSION = 0x03;
+	private final List<String> mPermissions=new ArrayList<>();
+	
 	private int mCheckItem = -1;
 	private int mMaxCount;
 	private boolean mShowVideo;
@@ -199,16 +203,19 @@ public class ImagePickActivity extends ImageBaseActivity
 			}
 		});
 		//进行权限的判断
-		boolean hasPermission = PermissionUtil.checkPermission(this);
-		if(!hasPermission){
-			ActivityCompat.requestPermissions(this,
-				new String[]{
-					Manifest.permission.CAMERA,
-					Manifest.permission.WRITE_EXTERNAL_STORAGE
-				},
-				REQ_CAMERA_PERMISSION);
-		}else{
-			startScannerTask();
+		mPermissions.add(permission.READ_EXTERNAL_STORAGE);
+		if(mShowCamera) mPermissions.add(Manifest.permission.CAMERA);
+		boolean hasPermission = true;
+		for(String item : mPermissions){
+			if(ContextCompat.checkSelfPermission(this, item)!=PackageManager.PERMISSION_GRANTED){
+				hasPermission=false;
+				break;
+			}
+		}
+		if(hasPermission) startScannerTask();
+		else{
+			String[] permissions = mPermissions.toArray(new String[0]);
+			ActivityCompat.requestPermissions(this, permissions, REQ_PERMISSION);
 		}
 	}
 	
@@ -216,25 +223,19 @@ public class ImagePickActivity extends ImageBaseActivity
 	 * 权限申请回调
 	 */
 	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-		@NonNull int[] grantResults){
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		if(requestCode==REQ_CAMERA_PERMISSION){
-			if(grantResults.length >= 1){
-				int cameraResult = grantResults[0];//相机权限
-				int sdResult = grantResults[1];//sd卡权限
-				boolean cameraGranted = cameraResult==PackageManager.PERMISSION_GRANTED;//拍照权限
-				boolean sdGranted = sdResult==PackageManager.PERMISSION_GRANTED;//拍照权限
-				if(cameraGranted && sdGranted){
-					//具有拍照权限，sd卡权限，开始扫描任务
-					startScannerTask();
-				}else{
-					//没有权限
-					Toast
-						.makeText(this, getString(R.string.permission_tip), Toast.LENGTH_SHORT)
-						.show();
-					finish();
-				}
+	public void onRequestPermissionsResult(int reqCode, String[] permissions, int[] results){
+		super.onRequestPermissionsResult(reqCode, permissions, results);
+		if(reqCode==REQ_PERMISSION){
+			boolean hasPermission=true;
+			for(int item : results) if(item!=PackageManager.PERMISSION_GRANTED){
+				hasPermission=false;
+				break;
+			}
+			if(hasPermission) startScannerTask();
+			else{
+				//没有权限
+				Toast.makeText(this, R.string.permission_tip, Toast.LENGTH_SHORT).show();
+				finish();
 			}
 		}
 	}
